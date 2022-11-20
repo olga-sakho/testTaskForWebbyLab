@@ -2,7 +2,7 @@ version: '3.5'
 services:
   api:
     image: ${IMAGE_NAME}
-    container_name: test-nodejs-webblabby
+    container_name: test-nodejs-webbylab
     restart: unless-stopped
     env_file: .env
     environment:
