@@ -121,10 +121,24 @@ Movies.getOneByTitle = async (title) => {
     })
 }
 
+Movies.getAllMovies = async () => {
+    return Movies.findAll({
+        attributes: {
+            exclude: ['actors']
+        },
+        include: [
+            {
+                model: Actors,
+                through: {
+                  attributes: []
+                }
+            }
+        ]
+    })
+}
+
 Movies.getListByParams = async (params) => {
     return await Movies.findAll({
-        limit: +params.limit || 20,
-        offset: +params.offset || 0,
         where: {
           title: {
             [Op.substring]: params.title || ''
@@ -134,7 +148,6 @@ Movies.getListByParams = async (params) => {
             actors: { [Op.substring]: params.search || '' }
           }
         },
-        order: [[params.sort || 'id', params.order || 'ASC']],
         include: [
           {
             model: Actors,
@@ -149,7 +162,10 @@ Movies.getListByParams = async (params) => {
             },
             duplicating: false
           }
-        ]
+        ],
+        order: [[params.sort || 'id', params.order || 'ASC']],
+        limit: +params.limit || 20,
+        offset: +params.offset || 0,
       });
 }
 

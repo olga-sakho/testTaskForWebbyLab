@@ -1,5 +1,6 @@
 import { Movies, Actors } from '../models/movies.js'
 import { Actors_Movies } from '../models/actors_movies.js'
+import { validateCreateMovie, validateActors } from "./validation.js";
 
 function One(movie) {
     const [title, year, format, actors] = movie.split('\n');
@@ -28,8 +29,10 @@ async function createMovieByImport (data) {
         if (existMovie) {
             return (`This movie ${data.title} already exist`);
         } else if (!existMovie) {
+            data = validateCreateMovie(data)
             movie = await Movies.createMovie(data);
             let actors = data.actors.split(',')
+            console.log(actors)
             for (let i=0; i < actors.length; i++){
                 actor = await Actors.createActor(actors[i]);
                 actorMovies = await Actors_Movies.addNew(actor.id, movie.id)
@@ -46,11 +49,11 @@ async function setManyFromFile(files) {
     let moviesCreation;
     let resultMovie = [];
     if (!files || !files.movies) {
-      return ("Not found file");
+      throw new Error ("Not found file");
     }
   
     if (files.movies.mimetype !== 'text/plain') {
-      return ("The file format must be .txt")
+      throw new Error ("The file format must be .txt")
     }
   
     const movies = importMany(files.movies.data.toString('utf8'));
@@ -79,7 +82,7 @@ async function setManyFromFile(files) {
     let actor;
     let actorMovies = [];
     let existActor;
-    let actors = arr.split(',')
+    let actors = validateActors(arr.split(','))
       for (let i=0; i < actors.length; i++){
         existActor = await Actors.getByName(actors[i]);
         console.log(existActor, 'actor')

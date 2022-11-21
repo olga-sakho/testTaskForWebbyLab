@@ -1,5 +1,4 @@
-
-//import { Actors } from "../models/actors.js";
+import { validateCreateMovie, validateUpdateMovie } from "./validation.js";
 import { Actors_Movies } from "../models/actors_movies.js";
 import { Movies, Actors } from "../models/movies.js"
 import { getActorInfo } from "./services.js"
@@ -10,8 +9,8 @@ const createMovie = async (req, res) => {
         let movie;
         let actorMovies;
         let existActor;
+        req.body = validateCreateMovie(req.body)
         const existMovie = await Movies.getOne(req.body)
-        console.log(existMovie)
         if (existMovie) {
             return res.send(`This movie ${req.body.title} already exist`);
             //return res.status(400).json(`This movie ${req.body.title} already exist`);
@@ -51,12 +50,29 @@ const getOneMovie = async (req, res) => {
     } 
 }
 
+const showAllMovie = async (req, res) => {
+    try {
+        const allMovies = await Movies.getAllMovie();
+        if (allMovies) {
+            return res.status(200).json({
+                status: 1,
+                data: allMovies,
+                meta: { total: allMovies.length }
+            });
+        } else if (!allMovies) {
+            return res.status(404).json({
+                message: "Not Found"
+            });
+        }
+    } catch (err) {
+        res.status(400).json(err.message);
+    } 
+}
+
   
 const getListSort = async (req, res) => {
     try {
-        console.log(req.query);
         const listMovie = await Movies.getListByParams(req.query);
-        console.log(listMovie)
         if (listMovie) {
             return res.status(200).json({
                 status: 1,
@@ -76,7 +92,8 @@ const getListSort = async (req, res) => {
 const updateMovie = async (req, res) => {
     try {
         let update;
-
+        
+        req.body = validateUpdateMovie(req.body)
         if (req.body.actors) {
             req.body.actors = req.body.actors.toString()
             update = await Movies.updateMovie(req.params.id, req.body)
@@ -140,6 +157,7 @@ const deleteMovie = async (req, res) => {
 export { 
     createMovie,
     getOneMovie,
+    showAllMovie,
     getListSort,
     updateMovie,
     deleteMovie

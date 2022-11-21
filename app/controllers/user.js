@@ -1,9 +1,13 @@
 import jwt from "jsonwebtoken"
 import { Users } from "../models/users.js"
+import { validateUser } from "./validation.js"
 
 const createUser =  async (req, res) => {
     let token;
     try {
+        console.log(req.body, '1')
+        req.body = validateUser(req.body);
+        console.log(req.body, '2')
         const userInDb = await Users.getUserByEmail(req.body.email); 
         if (!userInDb){
           if (req.body.password === req.body.confirmPassword) {
