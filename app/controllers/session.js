@@ -1,4 +1,5 @@
 import { Users } from "../models/users.js"
+import jwt from "jsonwebtoken"
 
 const authUser = async (req, res, next) => {
     let existingUser;
@@ -11,7 +12,7 @@ const authUser = async (req, res, next) => {
     let token;
     try {
       token = jwt.sign(
-        { userId: existingUser.id, email: existingUser.emailAddress },
+        { userId: existingUser.dataValues.id, email: existingUser.dataValues.emailAddress },
         process.env.TOKEN_SECRET,
         { expiresIn: process.env.JWT_EXPIRE_TIME }
       );
