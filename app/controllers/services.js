@@ -16,7 +16,7 @@ function importMany(data) {
         .split('\n\n')
         .map((movie) => One(movie));
     } catch (error) {
-        res.status(400).json(err.message);
+      return error.message;
     }
 }
 
@@ -25,14 +25,13 @@ async function createMovieByImport (data) {
         let actor;
         let movie;
         let actorMovies;
+        data = validateCreateMovie(data)
         const existMovie = await Movies.getOne(data)
         if (existMovie) {
             return (`This movie ${data.title} already exist`);
         } else if (!existMovie) {
-            data = validateCreateMovie(data)
             movie = await Movies.createMovie(data);
             let actors = data.actors.split(',')
-            console.log(actors)
             for (let i=0; i < actors.length; i++){
                 actor = await Actors.createActor(actors[i]);
                 actorMovies = await Actors_Movies.addNew(actor.id, movie.id)
@@ -48,34 +47,25 @@ async function createMovieByImport (data) {
 async function setManyFromFile(files) {
     let moviesCreation;
     let resultMovie = [];
-    if (!files || !files.movies) {
-      throw new Error ("Not found file");
-    }
+          const movies = importMany(files.movies.data.toString('utf8'));
+          for (let i = 0; i < movies.length; i++) {
+              moviesCreation = createMovieByImport(movies[i])
+              resultMovie.push(moviesCreation)
+          }
+          const imported = await Promise.allSettled(resultMovie);
+          const importedSuccessfully = [];
+          const notImported = [];
+        
+          imported.forEach((response) => {
+            if (response.status === 'fulfilled') {
+              importedSuccessfully.push(response.value);
+            } else {
+              notImported.push(response.reason.error);
+            }
+          });
+        
+          return [importedSuccessfully, imported.length, notImported];
   
-    if (files.movies.mimetype !== 'text/plain') {
-      throw new Error ("The file format must be .txt")
-    }
-  
-    const movies = importMany(files.movies.data.toString('utf8'));
-    for (let i = 0; i < movies.length; i++) {
-        moviesCreation = createMovieByImport(movies[i])
-        resultMovie.push(moviesCreation)
-    }
-
-  
-    const imported = await Promise.allSettled(resultMovie);
-    const importedSuccessfully = [];
-    const notImported = [];
-  
-    imported.forEach((response) => {
-      if (response.status === 'fulfilled') {
-        importedSuccessfully.push(response.value);
-      } else {
-        notImported.push(response.reason.error);
-      }
-    });
-  
-    return [importedSuccessfully, imported.length, notImported];
   }
 
   async function getActorInfo(arr, movieId) {
@@ -85,7 +75,6 @@ async function setManyFromFile(files) {
     let actors = validateActors(arr.split(','))
       for (let i=0; i < actors.length; i++){
         existActor = await Actors.getByName(actors[i]);
-        console.log(existActor, 'actor')
         if(existActor){
             console.log(`This actor ${actors[i]} already exist`)
         }

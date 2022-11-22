@@ -9,7 +9,9 @@ const authUser = async (req, res, next) => {
       req.body = validateUserSession(req.body)
       existingUser = await Users.getUserByEmail(req.body.email);
       if (!existingUser) {
-        return new Error(`User with ${req.body.email} doesn't exists!`);
+        throw new Error('User with email does not exists!');
+      } else if (existingUser && (existingUser.dataValues.password !== req.body.password)) {
+          throw new Error('Wrong password!');
       } else {
         token = jwt.sign(
           { userId: existingUser.dataValues.id, email: existingUser.dataValues.emailAddress },

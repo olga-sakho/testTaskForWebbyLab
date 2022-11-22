@@ -122,7 +122,7 @@ Movies.getOneByTitle = async (title) => {
 }
 
 Movies.getAllMovies = async () => {
-    return Movies.findAll({
+    return await Movies.findAll({
         attributes: {
             exclude: ['actors']
         },
@@ -138,35 +138,62 @@ Movies.getAllMovies = async () => {
 }
 
 Movies.getListByParams = async (params) => {
-    return await Movies.findAll({
-        where: {
-          title: {
-            [Op.substring]: params.title || ''
-          },
-          [Op.or]: {
-            title: { [Op.substring]: params.search || '' },
-            actors: { [Op.substring]: params.search || '' }
-          }
-        },
-        include: [
-          {
-            model: Actors,
+    if (params.title || params.search || params.actor){
+        return await Movies.findAll({
             where: {
-              name: {
-                [Op.substring]: params.actor || ''
+              title: {
+                [Op.or]: [{
+                    [Op.substring]: params.title || ''
+                },
+                {
+                    [Op.startsWith]: params.title || ''
+                }]
+              },
+              [Op.or]: [{
+                title: { [Op.substring]: params.search || '' },
+                actors: { [Op.substring]: params.search || '' }
+              }]
+            },
+            attributes: {
+                exclude: ['actors']
+            },
+            include: [
+              {
+                model: Actors,
+                where: {
+                  name: {
+                    [Op.substring]: params.actor || ''
+                  }
+                },
+                through: {
+                  attributes: []
+                },
+                duplicating: false
               }
+            ],
+            order: [[params.sort || 'id', params.order || 'ASC']],
+            limit: +params.limit || 20,
+            offset: +params.offset || 0,
+          });
+    } else {
+        return await Movies.findAll({
+            attributes: {
+                exclude: ['actors']
             },
-            attributes: [],
-            through: {
-              attributes: []
-            },
-            duplicating: false
-          }
-        ],
-        order: [[params.sort || 'id', params.order || 'ASC']],
-        limit: +params.limit || 20,
-        offset: +params.offset || 0,
-      });
+            include: [
+              {
+                model: Actors,
+                through: {
+                  attributes: []
+                },
+              }
+            ],
+            order: [[params.sort || 'id', params.order || 'ASC']],
+            limit: +params.limit || 20,
+            offset: +params.offset || 0,
+          });
+    }
+    
 }
 
 Movies.updateMovie = async (id, body) => {

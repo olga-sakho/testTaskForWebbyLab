@@ -13,7 +13,6 @@ const createMovie = async (req, res) => {
         const existMovie = await Movies.getOne(req.body)
         if (existMovie) {
             return res.send(`This movie ${req.body.title} already exist`);
-            //return res.status(400).json(`This movie ${req.body.title} already exist`);
         } else if (!existMovie) {
             movie = await Movies.createMovie(req.body);
             let actors = req.body.actors.split(',')
@@ -26,11 +25,9 @@ const createMovie = async (req, res) => {
                 actorMovies = await Actors_Movies.addNew(actor.id, movie.id)
             }
             movie = await Movies.getAllActors(movie.id)
-            //return res.send(movie);
             return res.status(201).json(movie);
         }
     } catch (err) {
-        //res.send(err.message);
         res.status(400).json(err.message);
     } 
 }
@@ -50,40 +47,44 @@ const getOneMovie = async (req, res) => {
     } 
 }
 
-const showAllMovie = async (req, res) => {
-    try {
-        const allMovies = await Movies.getAllMovie();
-        if (allMovies) {
-            return res.status(200).json({
-                status: 1,
-                data: allMovies,
-                meta: { total: allMovies.length }
-            });
-        } else if (!allMovies) {
-            return res.status(404).json({
-                message: "Not Found"
-            });
-        }
-    } catch (err) {
-        res.status(400).json(err.message);
-    } 
-}
 
   
 const getListSort = async (req, res) => {
     try {
-        const listMovie = await Movies.getListByParams(req.query);
-        if (listMovie) {
-            return res.status(200).json({
-                status: 1,
-                data: listMovie,
-                meta: { total: listMovie.length }
-              });
-        } else if (!listMovie) {
-            return res.status(404).json({
-                message: "Not Found"
-            });
+        let listMovie;
+        if (Object.keys(req.query).length == 0) {
+            const allMovies = await Movies.getAllMovies();
+            if (allMovies) {
+                return res.status(200).json({
+                    status: 1,
+                    data: allMovies,
+                    meta: { total: allMovies.length }
+                });
+            } else if (!allMovies) {
+                return res.status(404).json({
+                    message: "Not Found"
+                });
+            }
+        } else {
+            listMovie = await Movies.getListByParams(req.query);
+            if (req.query.sort === "title") {
+                listMovie = listMovie.sort((movie1, movie2) => {
+                  return movie1.title.localeCompare(movie2.title);
+                });
+              }
+            if (listMovie) {
+                return res.status(200).json({
+                    status: 1,
+                    data: listMovie,
+                    meta: { total: listMovie.length }
+                  });
+            } else if (!listMovie) {
+                return res.status(404).json({
+                    message: "Not Found"
+                });
+            }
         }
+       
     } catch (err) {
         res.status(400).json(err.message);
     } 
@@ -92,16 +93,12 @@ const getListSort = async (req, res) => {
 const updateMovie = async (req, res) => {
     try {
         let update;
-        
-        req.body = validateUpdateMovie(req.body)
         if (req.body.actors) {
+            req.body = validateUpdateMovie(req.body)
             req.body.actors = req.body.actors.toString()
             update = await Movies.updateMovie(req.params.id, req.body)
-            console.log(update, 'update')
             const actorInfo = await getActorInfo(req.body.actors, req.params.id);
-            //console.log(actorInfo, 'actorInfo')
             const result = await Movies.getOneById(update.id);
-           // console.log(result, 'result')
 
             return res.status(200).json({ 
                 data: { 
@@ -114,6 +111,7 @@ const updateMovie = async (req, res) => {
                 }, 
                 status: 1 });
         } else {
+            req.body = validateUpdateMovie(req.body)
             update = await Movies.updateMovie(req.params.id, req.body);
             const result = await Movies.getOneById(update.id);
             const actorInfo = await getActorInfo(
@@ -157,7 +155,6 @@ const deleteMovie = async (req, res) => {
 export { 
     createMovie,
     getOneMovie,
-    showAllMovie,
     getListSort,
     updateMovie,
     deleteMovie

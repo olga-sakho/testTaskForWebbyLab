@@ -68,10 +68,6 @@ function forbiddenSymbols(string) {
     if (!title || !year || !format || !actors) {
         throw new Error('All field are not empty');
     } else {
-        // validateTitle(title);
-        // validateYear(year);
-        // validateFormat(format);
-        // validateActors(actors);
         return {title: validateTitle(title), year: validateYear(year), format: validateFormat(format), actors: validateActors(actors)};
     }
   }
@@ -96,7 +92,9 @@ function forbiddenSymbols(string) {
     if (actors) {
       validateActors(actors);
     }
+    return {title: validateTitle(title), year: validateYear(year), format: validateFormat(format), actors: validateActors(actors)};
   }
+  
 
   function validateUser({ email, name, password, confirmPassword }) {
     if (!email || !name || !password || !confirmPassword) {
