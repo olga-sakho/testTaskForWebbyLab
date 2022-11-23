@@ -13,6 +13,8 @@ function forbiddenSymbols(string) {
   function validateTitle(title) {
     if (typeof title !== 'string') {
       throw new Error('Title must be a type string.')
+    } else if (!title || title.trim().length == 0){
+      throw new Error('Field title cannot be empty.')
     } else {
         return title
     }
@@ -40,7 +42,7 @@ function forbiddenSymbols(string) {
       'Blu-Ray': true
     };
   
-    if (typeof format !== 'string' && !formatsEnum[format]) {
+    if (typeof format !== 'string' || !enumFormat[format]) {
       throw new Error('Not valid format. Format must be VHS, DVD or Blu-Ray only')
     } else {
         return format
@@ -51,6 +53,8 @@ function forbiddenSymbols(string) {
   
     if (!Array.isArray(actors)) {
       throw new Error('List of actors must be in array.');
+    } else if (actors.length == 0) {
+      throw new Error('Field actors cannot be empty.');
     } else {
         actors.forEach((actor) => {
             if (typeof actor !== 'string' || forbiddenSymbols(actor)) {
